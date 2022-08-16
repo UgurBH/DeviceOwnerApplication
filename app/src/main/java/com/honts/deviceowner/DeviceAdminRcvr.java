@@ -32,7 +32,6 @@ public class DeviceAdminRcvr extends DeviceAdminReceiver {
         //super.onProfileProvisioningComplete(context, intent);
 
         //adb command to set the device owner is below
-        //adb shell dpm set-device-owner --user 0 com.burak.setstaticip/com.burak.setstaticip.DeviceAdminRcvr
         //adb shell dpm set-device-owner --user 0 com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr
     }
 

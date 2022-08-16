@@ -23,20 +23,23 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 
     Button wipeButton;
-    Button factoryResetButton;
+    Button setRestrictions;
+    Button setDeviceOwnerButton;
 
     private static final String TAG = "DO-MainActivity";
 
-    //private static final String FIRST_KIOSK_PACKAGE = "com.honts.kiosktest";
     private static final String FIRST_KIOSK_PACKAGE = "com.android.chrome";
-    private static final String SECOND_KIOSK_PACKAGE= "com.google.android.calculator";
-    private static final String[] APP_PACKAGES = {FIRST_KIOSK_PACKAGE,SECOND_KIOSK_PACKAGE};
+    private static final String SECOND_KIOSK_PACKAGE = "com.google.android.calculator";
+    private static final String[] APP_PACKAGES = {FIRST_KIOSK_PACKAGE, SECOND_KIOSK_PACKAGE};
+    private DevicePolicyManager devicePolicyManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d(TAG, "onCreate: activity starts");
+
+        devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
 
         wipeButton = findViewById(R.id.wipebutton);
         wipeButton.setOnClickListener(new View.OnClickListener() {
@@ -46,40 +49,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        factoryResetButton = findViewById(R.id.factoryResetButton);
-        factoryResetButton.setOnClickListener(new View.OnClickListener() {
+        setRestrictions = findViewById(R.id.setRestrictions);
+        setRestrictions.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 setRestrictions();
             }
         });
 
-        //setRestrictions();
     }
 
-    public void  wipeDevice(){
+    //below method shows how to perform factory reset with DevicePolicyManager
+    public void wipeDevice() {
         //DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        //devicePolicyManager.wipeData(0);
-        try {
-            Runtime.getRuntime().exec("dpm set-device-owner --user 0 com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr");
-            Log.d(TAG, "device owner set successfully");
-        } catch (Exception e) {
-            Log.e(TAG, "device owner not set");
-            e.printStackTrace();
-        }
+        devicePolicyManager.wipeData(0);
+
     }
 
-    public void setRestrictions(){
+    //below method shows how to set restrictions.
+    public void setRestrictions() {
         Log.i(TAG, "setting restrictions");
-        DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        //devicePolicyManager.addUserRestriction(DeviceAdminRcvr.getComponentName(this), UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT);
+        //DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        devicePolicyManager.addUserRestriction(DeviceAdminRcvr.getComponentName(this), UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT);
         //devicePolicyManager.setKeyguardDisabled(DeviceAdminRcvr.getComponentName(this), true);
         devicePolicyManager.setStatusBarDisabled(DeviceAdminRcvr.getComponentName(this), true);
-        devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED,"1");
-
-
-
-
+        devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED, "1");
 
 
         ActivityOptions options = ActivityOptions.makeBasic();
@@ -99,9 +93,6 @@ public class MainActivity extends AppCompatActivity {
         if(intent != null){
             MainActivity.this.startActivity(intent, options.toBundle());
         }*/
-
-
-
 
 
     }

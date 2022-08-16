@@ -14,20 +14,10 @@ public class BroadcastReceiver extends android.content.BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "onReceive: LOCKED_BOOT received");
 
-        Context context1 = context.createDeviceProtectedStorageContext();
-        context1.getSharedPreferences("DeviceProtectedStorage", Context.MODE_PRIVATE);
+        //perform your actions here
+        //Context context1 = context.createDeviceProtectedStorageContext();
+        //context1.getSharedPreferences("DeviceProtectedStorage", Context.MODE_PRIVATE);
 
-        try {
-            //context1.openFileInput("test.txt");
-            context1.openFileInput("\"/data/user_de/0/com.android.shell/files/bugreports/test.txt\"");
-            //FileInputStream fileInputStream = new FileInputStream(new File("/data/user_de/0/com.android.shell/files/bugreports/test.txt"));
-            //FileInputStream fileInputStream = new FileInputStream(new File("/bugreports/test.txt"));
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, "onReceive: LOCKED_BOOT file not found exception" );
-            e.printStackTrace();
-        }
-
-        Log.d(TAG, "onReceive: try - catch start");
         try {
             Log.i(TAG, "onReceive: sleep 5 seconds");
             Thread.sleep(5000);
@@ -37,6 +27,7 @@ public class BroadcastReceiver extends android.content.BroadcastReceiver {
         }
         Log.d(TAG, "onReceive: try - catch end");
 
+        //below code starts main activity after boot locked completed intent
         Intent i = new Intent(context,MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(i);
