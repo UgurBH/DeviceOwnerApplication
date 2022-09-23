@@ -28,9 +28,9 @@ public class BroadcastReceiver extends android.content.BroadcastReceiver {
         Log.d(TAG, "onReceive: try - catch end");
 
         //below code starts main activity after boot locked completed intent
-        Intent i = new Intent(context,MainActivity.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(i);
+//        Intent i = new Intent(context,MainActivity.class);
+//        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        context.startActivity(i);
 
     }
 }

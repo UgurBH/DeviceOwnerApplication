@@ -69,7 +69,11 @@ public class MainActivity extends AppCompatActivity {
     //below method shows how to set restrictions.
     public void setRestrictions() {
         Log.i(TAG, "setting restrictions");
-        //DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+
+        Intent startAppRestrictions = new Intent(this,ApplyRestrictions.class);
+        startActivity(startAppRestrictions);
+
+        /*//DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
         devicePolicyManager.addUserRestriction(DeviceAdminRcvr.getComponentName(this), UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT);
         //devicePolicyManager.setKeyguardDisabled(DeviceAdminRcvr.getComponentName(this), true);
         devicePolicyManager.setStatusBarDisabled(DeviceAdminRcvr.getComponentName(this), true);
@@ -93,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
         if(intent != null){
             MainActivity.this.startActivity(intent, options.toBundle());
         }*/
-
 
     }
 //Notes

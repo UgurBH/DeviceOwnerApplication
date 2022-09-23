@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Device Owner</string>
+    <string name="appRest_airplane">Airplane Toggle Control</string>
 </resources>
