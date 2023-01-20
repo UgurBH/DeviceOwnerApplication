@@ -33,6 +33,8 @@ public class DeviceAdminRcvr extends DeviceAdminReceiver {
 
         //adb command to set the device owner is below
         //adb shell dpm set-device-owner --user 0 com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr
+
+
     }
 
     public static ComponentName getComponentName(Context context) {

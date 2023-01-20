@@ -1,5 +1,7 @@
 package com.honts.deviceowner;
 
+import static android.app.admin.DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityOptions;
@@ -25,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     Button wipeButton;
     Button setRestrictions;
     Button setDeviceOwnerButton;
+    private Button setPinButton;
 
     private static final String TAG = "DO-MainActivity";
 
@@ -57,6 +60,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        setPinButton = findViewById(R.id.setPin);
+        setPinButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setPinCode();
+            }
+        });
+
+    }
+
+    // below method sets the Pin code
+    public void setPinCode(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED, "1");
+            byte byteValue[] = new byte[123] ;
+            devicePolicyManager.setResetPasswordToken(DeviceAdminRcvr.getComponentName(this), byteValue);
+            Log.d(TAG, "setPinCode: is active " + devicePolicyManager.isResetPasswordTokenActive(DeviceAdminRcvr.getComponentName(this)));
+            devicePolicyManager.resetPasswordWithToken(DeviceAdminRcvr.getComponentName(this), "1234",byteValue,1);
+        }
     }
 
     //below method shows how to perform factory reset with DevicePolicyManager
