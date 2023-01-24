@@ -6,11 +6,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityOptions;
 import android.app.KeyguardManager;
+import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
 import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.RecoverySystem;
@@ -24,17 +28,21 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "DO-MainActivity";
+
+    private static final String FIRST_KIOSK_PACKAGE = "com.honts.recorder";
+    private static final String SECOND_KIOSK_PACKAGE = "com.google.android.calculator";
+    private static final String[] APP_PACKAGES = {FIRST_KIOSK_PACKAGE, SECOND_KIOSK_PACKAGE};
+
+    private DevicePolicyManager devicePolicyManager;
+    private AppInstallerListener appInstallerListener;
+    private IntentFilter registerAppIntentFilter;
+
+
     Button wipeButton;
     Button setRestrictions;
     Button setDeviceOwnerButton;
     private Button setPinButton;
-
-    private static final String TAG = "DO-MainActivity";
-
-    private static final String FIRST_KIOSK_PACKAGE = "com.android.chrome";
-    private static final String SECOND_KIOSK_PACKAGE = "com.google.android.calculator";
-    private static final String[] APP_PACKAGES = {FIRST_KIOSK_PACKAGE, SECOND_KIOSK_PACKAGE};
-    private DevicePolicyManager devicePolicyManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,20 +72,55 @@ public class MainActivity extends AppCompatActivity {
         setPinButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //unistallApps("com.honts.recorder");
                 setPinCode();
             }
         });
 
+        registerAppInstaller();
+
+    }
+
+    public void registerAppInstaller() {
+        appInstallerListener = new AppInstallerListener();
+        registerAppIntentFilter = new IntentFilter();
+        registerAppIntentFilter.addAction("Honts_DeviceOwner_deleteApp");
+        registerReceiver(appInstallerListener, registerAppIntentFilter);
+
+
+    }
+
+    //below method uninstall the apps
+    public void unistallApps(String appname) {
+
+        //the code below uninstalls the app with pop-up message box on Android 11
+        /*
+        Intent intent = new Intent(Intent.ACTION_UNINSTALL_PACKAGE);
+        intent.setData(Uri.parse("package:" + appname));
+        startActivity(intent);
+        */
+
+        //below code uninstalls the app silently on Android 11
+
+        Intent intent = new Intent(this, this.getClass());
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,0,intent,0);
+        PackageInstaller packageInstaller = this.getPackageManager().getPackageInstaller();
+        packageInstaller.uninstall(appname,pendingIntent.getIntentSender());
+
+
+
+
+
     }
 
     // below method sets the Pin code
-    public void setPinCode(){
+    public void setPinCode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED, "1");
-            byte byteValue[] = new byte[123] ;
+            byte byteValue[] = new byte[123];
             devicePolicyManager.setResetPasswordToken(DeviceAdminRcvr.getComponentName(this), byteValue);
             Log.d(TAG, "setPinCode: is active " + devicePolicyManager.isResetPasswordTokenActive(DeviceAdminRcvr.getComponentName(this)));
-            devicePolicyManager.resetPasswordWithToken(DeviceAdminRcvr.getComponentName(this), "1234",byteValue,1);
+            devicePolicyManager.resetPasswordWithToken(DeviceAdminRcvr.getComponentName(this), "1234", byteValue, 1);
         }
     }
 
@@ -92,13 +135,13 @@ public class MainActivity extends AppCompatActivity {
     public void setRestrictions() {
         Log.i(TAG, "setting restrictions");
 
-        Intent startAppRestrictions = new Intent(this,ApplyRestrictions.class);
-        startActivity(startAppRestrictions);
+        //Intent startAppRestrictions = new Intent(this, ApplyRestrictions.class);
+        //startActivity(startAppRestrictions);
 
-        /*//DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        devicePolicyManager.addUserRestriction(DeviceAdminRcvr.getComponentName(this), UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT);
+        //DevicePolicyManager devicePolicyManager = (DevicePolicyManager) MainActivity.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+        //devicePolicyManager.addUserRestriction(DeviceAdminRcvr.getComponentName(this), UserManager.DISALLOW_CONFIG_SCREEN_TIMEOUT);
         //devicePolicyManager.setKeyguardDisabled(DeviceAdminRcvr.getComponentName(this), true);
-        devicePolicyManager.setStatusBarDisabled(DeviceAdminRcvr.getComponentName(this), true);
+        //devicePolicyManager.setStatusBarDisabled(DeviceAdminRcvr.getComponentName(this), true);
         devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED, "1");
 
 
@@ -106,19 +149,20 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             options.setLockTaskEnabled(true);
             Log.d(TAG, "setRestrictions: entered keyguard if statement");
-            //devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this),DevicePolicyManager.LOCK_TASK_FEATURE_KEYGUARD);
+            //devicePolicyManager.setKeyguardDisabled(DeviceAdminRcvr.getComponentName(this), true); //make this false to solve scan engine issue
+            //devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this),DevicePolicyManager.LOCK_TASK_FEATURE_HOME);
 
 
         }
 
         //kiosk mode method starting chrome and setting it as kiosk app
 
-        //devicePolicyManager.setLockTaskPackages(DeviceAdminRcvr.getComponentName(this),APP_PACKAGES);
-        /*PackageManager packageManager = MainActivity.this.getPackageManager();
+        devicePolicyManager.setLockTaskPackages(DeviceAdminRcvr.getComponentName(this),APP_PACKAGES);
+        PackageManager packageManager = MainActivity.this.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(FIRST_KIOSK_PACKAGE);
         if(intent != null){
             MainActivity.this.startActivity(intent, options.toBundle());
-        }*/
+        }
 
     }
 //Notes
