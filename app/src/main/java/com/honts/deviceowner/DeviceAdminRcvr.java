@@ -25,6 +25,7 @@ public class DeviceAdminRcvr extends DeviceAdminReceiver {
         manager.setProfileEnabled(componentName);
 
 
+
         Intent launch = new Intent(context, MainActivity.class);
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(launch);

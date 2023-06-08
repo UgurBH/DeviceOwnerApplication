@@ -15,16 +15,35 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiEnterpriseConfig;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.RecoverySystem;
 import android.os.UserManager;
 import android.provider.Settings;
+import android.security.KeyChain;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -43,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     Button setRestrictions;
     Button setDeviceOwnerButton;
     private Button setPinButton;
+    private Button certInstallerBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,9 +97,48 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        certInstallerBtn = findViewById(R.id.certInstaller);
+        certInstallerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    installCerts();
+                } catch (CertificateException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         registerAppInstaller();
 
     }
+
+    public void installCerts() throws CertificateException, IOException, NoSuchAlgorithmException {
+        File file = new File("/sdcard/myCA.pem");
+        //String file = "/sdcard/myCA.pem";
+        devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED, "1");
+
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        PrivateKey privateKey = keyPair.getPrivate();
+
+        FileInputStream certificateInputStream = new FileInputStream(file);
+        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        X509Certificate caCertificate = (X509Certificate) certificateFactory.generateCertificate(certificateInputStream);
+
+        byte[] certificateData = caCertificate.getEncoded();
+
+
+        //devicePolicyManager.installCaCert(DeviceAdminRcvr.getComponentName(this), certificateData);
+        devicePolicyManager.installKeyPair(DeviceAdminRcvr.getComponentName(this), privateKey, caCertificate, "testing");
+
+
+    }
+
 
     public void registerAppInstaller() {
         appInstallerListener = new AppInstallerListener();
@@ -103,12 +162,9 @@ public class MainActivity extends AppCompatActivity {
         //below code uninstalls the app silently on Android 11
 
         Intent intent = new Intent(this, this.getClass());
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,0,intent,0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         PackageInstaller packageInstaller = this.getPackageManager().getPackageInstaller();
-        packageInstaller.uninstall(appname,pendingIntent.getIntentSender());
-
-
-
+        packageInstaller.uninstall(appname, pendingIntent.getIntentSender());
 
 
     }
@@ -131,6 +187,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            //do something or nothing in your case
+            Log.d(TAG, "onKeyLongPress: back key pressed !!!! ***");
+            return true;
+        }
+        return super.onKeyLongPress(keyCode, event);
+    }
+
     //below method shows how to set restrictions.
     public void setRestrictions() {
         Log.i(TAG, "setting restrictions");
@@ -151,16 +218,17 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "setRestrictions: entered keyguard if statement");
             //devicePolicyManager.setKeyguardDisabled(DeviceAdminRcvr.getComponentName(this), true); //make this false to solve scan engine issue
             //devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this),DevicePolicyManager.LOCK_TASK_FEATURE_HOME);
-
+            //devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this), DevicePolicyManager.LOCK_TASK_FEATURE_NOTIFICATIONS);
+            devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this), DevicePolicyManager.LOCK_TASK_FEATURE_HOME | DevicePolicyManager.LOCK_TASK_FEATURE_NONE);
 
         }
 
         //kiosk mode method starting chrome and setting it as kiosk app
 
-        devicePolicyManager.setLockTaskPackages(DeviceAdminRcvr.getComponentName(this),APP_PACKAGES);
+        devicePolicyManager.setLockTaskPackages(DeviceAdminRcvr.getComponentName(this), APP_PACKAGES);
         PackageManager packageManager = MainActivity.this.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(FIRST_KIOSK_PACKAGE);
-        if(intent != null){
+        if (intent != null) {
             MainActivity.this.startActivity(intent, options.toBundle());
         }
 
