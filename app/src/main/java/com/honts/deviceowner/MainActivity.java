@@ -1,45 +1,33 @@
 package com.honts.deviceowner;
 
-import static android.app.admin.DevicePolicyManager.RESET_PASSWORD_REQUIRE_ENTRY;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ActivityOptions;
-import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
-import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiEnterpriseConfig;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.RecoverySystem;
-import android.os.UserManager;
 import android.provider.Settings;
-import android.security.KeyChain;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -51,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String FIRST_KIOSK_PACKAGE = "com.honts.recorder";
     private static final String SECOND_KIOSK_PACKAGE = "com.google.android.calculator";
-    private static final String[] APP_PACKAGES = {FIRST_KIOSK_PACKAGE, SECOND_KIOSK_PACKAGE};
+    private static final String[] APP_PACKAGES = {FIRST_KIOSK_PACKAGE, SECOND_KIOSK_PACKAGE, Settings.ACTION_BLUETOOTH_SETTINGS};
 
     private DevicePolicyManager devicePolicyManager;
     private AppInstallerListener appInstallerListener;
@@ -109,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
+                } catch (NoSuchProviderException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -117,8 +107,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void installCerts() throws CertificateException, IOException, NoSuchAlgorithmException {
-        File file = new File("/sdcard/myCA.pem");
+    public void installCerts() throws CertificateException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
+        File file = new File("/sdcard/myCA.cer");
+        //File filePfx = new File("/sdcard/myCA.pfx");
         //String file = "/sdcard/myCA.pem";
         devicePolicyManager.setGlobalSetting(DeviceAdminRcvr.getComponentName(this), Settings.Global.ADB_ENABLED, "1");
 
@@ -126,14 +117,19 @@ public class MainActivity extends AppCompatActivity {
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         PrivateKey privateKey = keyPair.getPrivate();
 
+
         FileInputStream certificateInputStream = new FileInputStream(file);
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+        CertificateFactory certificateFactory = null;
+        certificateFactory = CertificateFactory.getInstance("X.509");
         X509Certificate caCertificate = (X509Certificate) certificateFactory.generateCertificate(certificateInputStream);
+
+
 
         byte[] certificateData = caCertificate.getEncoded();
 
 
         //devicePolicyManager.installCaCert(DeviceAdminRcvr.getComponentName(this), certificateData);
+
         devicePolicyManager.installKeyPair(DeviceAdminRcvr.getComponentName(this), privateKey, caCertificate, "testing");
 
 
@@ -219,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
             //devicePolicyManager.setKeyguardDisabled(DeviceAdminRcvr.getComponentName(this), true); //make this false to solve scan engine issue
             //devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this),DevicePolicyManager.LOCK_TASK_FEATURE_HOME);
             //devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this), DevicePolicyManager.LOCK_TASK_FEATURE_NOTIFICATIONS);
-            devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this), DevicePolicyManager.LOCK_TASK_FEATURE_HOME | DevicePolicyManager.LOCK_TASK_FEATURE_NONE);
+            devicePolicyManager.setLockTaskFeatures(DeviceAdminRcvr.getComponentName(this), DevicePolicyManager.LOCK_TASK_FEATURE_HOME | DevicePolicyManager.LOCK_TASK_FEATURE_NOTIFICATIONS | DevicePolicyManager.LOCK_TASK_FEATURE_GLOBAL_ACTIONS);
 
         }
 
