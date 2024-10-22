@@ -34,6 +34,7 @@ public class DeviceAdminRcvr extends DeviceAdminReceiver {
 
         //adb command to set the device owner is below
         //adb shell dpm set-device-owner --user 0 com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr
+        //adb shell dpm remove-active-admin com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr
 
 
     }
