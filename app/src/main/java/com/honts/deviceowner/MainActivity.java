@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
+// this method will install the user app VPN certificate
     public void installCerts() throws CertificateException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
         File file = new File("/sdcard/myCA.pem");
         //File filePfx = new File("/sdcard/myCA.pfx");
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
+//this method will install with wifi certificate & root certificate
     public void installWifiCert(Context context) throws Exception {
         // Load the client certificate (PEM or P12 file)
         FileInputStream fis = new FileInputStream("/sdcard/myCA.pfx");
@@ -186,15 +186,18 @@ public class MainActivity extends AppCompatActivity {
         WifiConfiguration wifiConfig = new WifiConfiguration();
 
         // Set your Wi-Fi SSID (network name)
-        wifiConfig.SSID = "\"" + "burak" + "\"";
+        wifiConfig.SSID = "\"" + "burakDO_SSID" + "\"";
 
         // Use WPA2-Enterprise (EAP-TLS) for security
-        wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
+        //wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
         wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
+
 
         // Configure the Enterprise settings
         WifiEnterpriseConfig enterpriseConfig = new WifiEnterpriseConfig();
-        enterpriseConfig.setEapMethod(WifiEnterpriseConfig.Eap.TLS);
+        enterpriseConfig.setEapMethod(WifiEnterpriseConfig.Eap.PEAP);
+        // if I do not add this, it will fail on Android 14
+        //enterpriseConfig.setDomainSuffixMatch("burak");
 
         // Set client certificate and private key
         //enterpriseConfig.setClientKeyEntry(privateKey, (X509Certificate) certificateChain[0]);
