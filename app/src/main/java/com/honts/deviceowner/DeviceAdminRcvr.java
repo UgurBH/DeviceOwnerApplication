@@ -25,6 +25,7 @@ public class DeviceAdminRcvr extends DeviceAdminReceiver {
         manager.setProfileEnabled(componentName);
 
 
+
         Intent launch = new Intent(context, MainActivity.class);
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(launch);
@@ -33,6 +34,7 @@ public class DeviceAdminRcvr extends DeviceAdminReceiver {
 
         //adb command to set the device owner is below
         //adb shell dpm set-device-owner --user 0 com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr
+        //adb shell dpm remove-active-admin com.honts.deviceowner/com.honts.deviceowner.DeviceAdminRcvr
 
 
     }
